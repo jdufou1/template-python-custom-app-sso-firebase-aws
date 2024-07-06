@@ -1,0 +1,25 @@
+name: Deployment to Google Cloud
+
+on: 
+  push:
+    branches:
+      - master 
+
+jobs: 
+    build_docker_image :
+        name : Build Docker Image
+        runs-on : ubuntu-latest
+        environment: google-cloud
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                ref: master
+
+            - name: Login to GCP
+              uses: 'google-github-actions/auth@v2'
+              with:
+                token_format: 'access_token'
+                project_id: '${{ secrets.PROJECT_ID }}'
+                service_account : '${{ secrets.SERVICE_ACCOUNT }}'
+                workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_POOL }}'
