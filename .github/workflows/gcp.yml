@@ -5,7 +5,12 @@ on:
     branches:
       - master 
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs: 
+  
     build_docker_image :
         name : Build Docker Image
         runs-on : ubuntu-latest
