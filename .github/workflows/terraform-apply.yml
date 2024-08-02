@@ -1,13 +1,7 @@
-# .github/workflows/terraform-apply.yml
 name: Terraform Apply
 
 on:
   workflow_dispatch:
-    inputs:
-      plan:
-        description: 'Path to the plan file'
-        required: true
-        default: 'plan.tfplan'
 
 permissions:
   id-token: write
@@ -16,7 +10,7 @@ permissions:
 jobs:
   terraform_apply:
     runs-on: ubuntu-latest
-    environment: production # This environment should be configured with required reviewers
+    environment: google-cloud
     env:
       TF_VAR_project_id: ${{ secrets.PROJECT_ID }}
       TF_VAR_region: ${{ secrets.REGION }}
@@ -24,12 +18,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Download Plan
-        uses: actions/download-artifact@v2
         with:
-          name: terraform-plan
-          path: .
+          ref: master
 
       - name: Login to GCP
         uses: google-github-actions/auth@v2
@@ -42,9 +32,12 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Download Plan
+        uses: actions/download-artifact@v2
+        with:
+          name: terraform-plan
+          path: .
+
       - name: Terraform Apply
         id: apply
-        run: terraform apply -input=false plan.tfplan
-
-
-        
+        run: terraform apply -auto-approve plan.tfplan
