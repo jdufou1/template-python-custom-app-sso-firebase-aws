@@ -33,6 +33,8 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '5.39.1' # specify your Terraform version
 
       # - name: Terraform fmt
       #   id: fmt
@@ -81,6 +83,8 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '5.39.1' # specify your Terraform version
 
       - name: Download Plan
         uses: actions/download-artifact@v2
@@ -116,6 +120,8 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '5.39.1' # specify your Terraform version
 
       - name: Terraform Init
         id: init
