@@ -1,13 +1,7 @@
-# .github/workflows/terraform-destroy.yml
 name: Terraform Destroy
 
 on:
   workflow_dispatch:
-    inputs:
-      plan:
-        description: 'Path to the plan file'
-        required: true
-        default: 'plan.tfplan'
 
 permissions:
   id-token: write
@@ -16,7 +10,7 @@ permissions:
 jobs:
   terraform_destroy:
     runs-on: ubuntu-latest
-    environment: production # This environment should be configured with required reviewers
+    environment: google-cloud
     env:
       TF_VAR_project_id: ${{ secrets.PROJECT_ID }}
       TF_VAR_region: ${{ secrets.REGION }}
@@ -24,6 +18,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: master
 
       - name: Login to GCP
         uses: google-github-actions/auth@v2
@@ -38,7 +34,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init
+        run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}"
 
       - name: Terraform Destroy
         id: destroy
