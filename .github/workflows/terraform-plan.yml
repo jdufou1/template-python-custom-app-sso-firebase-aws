@@ -4,16 +4,6 @@ on:
   push:
     branches:
       - master
-  # workflow_dispatch:
-  #   inputs:
-  #     action:
-  #       description: 'Choose the action to perform'
-  #       required: true
-  #       default: 'apply'
-  #       type: choice
-  #       options:
-  #         - apply
-  #         - destroy
 
 permissions:
   id-token: write
@@ -66,18 +56,6 @@ jobs:
           name: terraform-plan
           path: plan.tfplan
 
-      # - name: Comment Plan
-      #   uses: actions/github-script@v6
-      #   with:
-      #     script: |
-      #       const fs = require('fs');
-      #       const plan = fs.readFileSync('plan.tfplan', 'utf8');
-      #       github.rest.issues.createComment({
-      #         owner: context.repo.owner,
-      #         repo: context.repo.repo,
-      #         issue_number: context.issue.number,
-      #         body: `Terraform Plan:\n\`\`\`terraform\n${plan}\n\`\`\``
-      #       });
 
   terraform_apply:
     name: Terraform Apply
@@ -119,7 +97,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     # if: github.event.inputs.action == 'destroy'
-    needs: terraform_plan
+    needs: terraform_apply
     env:
       TF_VAR_project_id: ${{ secrets.PROJECT_ID }}
       TF_VAR_region: ${{ secrets.REGION }}
