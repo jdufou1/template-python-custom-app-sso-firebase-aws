@@ -5,6 +5,15 @@ on:
     branches:
       - master
   workflow_dispatch:
+    inputs:
+      action:
+        description: 'Choose the action to perform'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - apply
+          - destroy
 
 permissions:
   id-token: write
@@ -28,9 +37,9 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           token_format: 'access_token'
-          project_id: '${{ secrets.PROJECT_ID }}'
-          service_account: '${{ secrets.SERVICE_ACCOUNT }}'
-          workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_POOL }}'
+          project_id: ${{ secrets.PROJECT_ID }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_POOL }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -57,12 +66,24 @@ jobs:
           name: terraform-plan
           path: plan.tfplan
 
+      - name: Comment Plan
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('plan.tfplan', 'utf8');
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Terraform Plan:\n\`\`\`terraform\n${plan}\n\`\`\``
+            });
+
   terraform_apply:
     name: Terraform Apply
     runs-on: ubuntu-latest
     environment: production
-    if: github.event_name == 'workflow_dispatch'
-    needs: terraform_plan
+    if: github.event.inputs.action == 'apply'
     env:
       TF_VAR_project_id: ${{ secrets.PROJECT_ID }}
       TF_VAR_region: ${{ secrets.REGION }}
@@ -75,9 +96,9 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           token_format: 'access_token'
-          project_id: '${{ secrets.PROJECT_ID }}'
-          service_account: '${{ secrets.SERVICE_ACCOUNT }}'
-          workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_POOL }}'
+          project_id: ${{ secrets.PROJECT_ID }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_POOL }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -96,7 +117,7 @@ jobs:
     name: Terraform Destroy
     runs-on: ubuntu-latest
     environment: production
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event.inputs.action == 'destroy'
     env:
       TF_VAR_project_id: ${{ secrets.PROJECT_ID }}
       TF_VAR_region: ${{ secrets.REGION }}
@@ -109,9 +130,9 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           token_format: 'access_token'
-          project_id: '${{ secrets.PROJECT_ID }}'
-          service_account: '${{ secrets.SERVICE_ACCOUNT }}'
-          workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_POOL }}'
+          project_id: ${{ secrets.PROJECT_ID }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_POOL }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
