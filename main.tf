@@ -3,6 +3,14 @@ terraform {
     bucket  = var.bucket_name
     prefix  = "terraform/state"
   }
+
+  required_providers {
+    google = {
+      source = "hashicorp/google"
+      version = "6.0.0" 
+    }
+  }
+  
 }
 
 provider "google" {
