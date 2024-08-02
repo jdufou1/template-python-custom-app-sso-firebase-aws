@@ -1,10 +1,10 @@
-# .github/workflows/terraform-plan.yml
-name: Terraform Plan
+name: Terraform Workflow
 
 on:
   push:
     branches:
       - master
+  workflow_dispatch:
 
 permissions:
   id-token: write
@@ -12,8 +12,10 @@ permissions:
 
 jobs:
   terraform_plan:
+    name: Terraform Plan
     runs-on: ubuntu-latest
     environment: google-cloud
+    if: github.event_name == 'push'
     env:
       TF_VAR_project_id: ${{ secrets.PROJECT_ID }}
       TF_VAR_region: ${{ secrets.REGION }}
@@ -21,8 +23,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: master
 
       - name: Login to GCP
         uses: google-github-actions/auth@v2
@@ -56,3 +56,83 @@ jobs:
         with:
           name: terraform-plan
           path: plan.tfplan
+
+      - name: Comment Plan
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('plan.tfplan', 'utf8');
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Terraform Plan:\n\`\`\`terraform\n${plan}\n\`\`\``
+            });
+
+  terraform_apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.event_name == 'workflow_dispatch'
+    needs: terraform_plan
+    env:
+      TF_VAR_project_id: ${{ secrets.PROJECT_ID }}
+      TF_VAR_region: ${{ secrets.REGION }}
+      TF_VAR_bucket_name: ${{ secrets.BUCKET_NAME }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: 'access_token'
+          project_id: '${{ secrets.PROJECT_ID }}'
+          service_account: '${{ secrets.SERVICE_ACCOUNT }}'
+          workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_POOL }}'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Download Plan
+        uses: actions/download-artifact@v2
+        with:
+          name: terraform-plan
+          path: .
+
+      - name: Terraform Apply
+        id: apply
+        run: terraform apply -auto-approve plan.tfplan
+
+  terraform_destroy:
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.event_name == 'workflow_dispatch'
+    env:
+      TF_VAR_project_id: ${{ secrets.PROJECT_ID }}
+      TF_VAR_region: ${{ secrets.REGION }}
+      TF_VAR_bucket_name: ${{ secrets.BUCKET_NAME }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: 'access_token'
+          project_id: '${{ secrets.PROJECT_ID }}'
+          service_account: '${{ secrets.SERVICE_ACCOUNT }}'
+          workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_POOL }}'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}"
+
+      - name: Terraform Destroy
+        id: destroy
+        run: terraform destroy -auto-approve
