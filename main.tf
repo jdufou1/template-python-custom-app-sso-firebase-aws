@@ -17,5 +17,9 @@ provider "google" {
 }
 
 resource "google_storage_bucket" "bucket" {
-  name = var.bucket_name
+  name = "jdufou1-test-cicd"
+  project = var.project_id
+  location = var.region
+  storage_class = "STANDARD"
+  force_destroy = true
 }
