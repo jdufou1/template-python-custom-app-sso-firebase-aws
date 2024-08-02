@@ -1,11 +1,10 @@
 terraform {
   backend "gcs" {
-    bucket  = "terraform-state"
-    prefix  = "terraform/state"  # Optional: Organize state files in a specific path within the bucket
+    bucket  = var.bucket_name
+    prefix  = "terraform/state"
   }
 }
 
-# main.tf
 provider "google" {
   project = var.project_id
   region  = var.region
