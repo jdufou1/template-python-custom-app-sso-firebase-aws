@@ -4,16 +4,16 @@ on:
   push:
     branches:
       - master
-  workflow_dispatch:
-    inputs:
-      action:
-        description: 'Choose the action to perform'
-        required: true
-        default: 'apply'
-        type: choice
-        options:
-          - apply
-          - destroy
+  # workflow_dispatch:
+  #   inputs:
+  #     action:
+  #       description: 'Choose the action to perform'
+  #       required: true
+  #       default: 'apply'
+  #       type: choice
+  #       options:
+  #         - apply
+  #         - destroy
 
 permissions:
   id-token: write
@@ -83,7 +83,7 @@ jobs:
     name: Terraform Apply
     runs-on: ubuntu-latest
     environment: production
-    if: github.event.inputs.action == 'apply'
+    # if: github.event.inputs.action == 'apply'
     needs: terraform_plan
     env:
       TF_VAR_project_id: ${{ secrets.PROJECT_ID }}
@@ -118,7 +118,7 @@ jobs:
     name: Terraform Destroy
     runs-on: ubuntu-latest
     environment: production
-    if: github.event.inputs.action == 'destroy'
+    # if: github.event.inputs.action == 'destroy'
     needs: terraform_plan
     env:
       TF_VAR_project_id: ${{ secrets.PROJECT_ID }}
