@@ -59,45 +59,45 @@ jobs:
           path: plan.tfplan
 
 
-terraform_apply:
-  name: Terraform Apply
-  runs-on: ubuntu-latest
-  environment: production
-  needs: terraform_plan
-  env:
-    TF_VAR_project_id: ${{ secrets.PROJECT_ID }}
-    TF_VAR_region: ${{ secrets.REGION }}
-    TF_VAR_bucket_name: ${{ secrets.BUCKET_NAME }}
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+  terraform_apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    environment: production
+    needs: terraform_plan
+    env:
+      TF_VAR_project_id: ${{ secrets.PROJECT_ID }}
+      TF_VAR_region: ${{ secrets.REGION }}
+      TF_VAR_bucket_name: ${{ secrets.BUCKET_NAME }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Login to GCP
-      uses: google-github-actions/auth@v2
-      with:
-        token_format: 'access_token'
-        project_id: ${{ secrets.PROJECT_ID }}
-        service_account: ${{ secrets.SERVICE_ACCOUNT }}
-        workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_POOL }}
+      - name: Login to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: 'access_token'
+          project_id: ${{ secrets.PROJECT_ID }}
+          service_account: ${{ secrets.SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_POOL }}
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: "1.1.7"
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.1.7"
 
-    - name: Download Plan
-      uses: actions/download-artifact@v4
-      with:
-        name: terraform-plan
-        path: .
+      - name: Download Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-plan
+          path: .
 
-    - name: Terraform Init
-      id: init
-      run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}"
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend-config="bucket=${{ secrets.BUCKET_NAME }}"
 
-    - name: Terraform Apply
-      id: apply
-      run: terraform apply -auto-approve plan.tfplan
+      - name: Terraform Apply
+        id: apply
+        run: terraform apply -auto-approve plan.tfplan
 
 
   terraform_destroy:
